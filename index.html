@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D AI Project</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #record-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: rgb(255, 255, 255);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 48px;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <button id="record-button">🎤</button>
+    <script lang="javascript">
+        // Voice recognition setup
+        const recordButton = document.getElementById('record-button');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+
+        recognition.onresult = function(event) {
+            recordButton.style.backgroundColor = 'rgb(255, 255, 255)';
+            const voiceCommand = event.results[0][0].transcript;
+            console.log('Voice Command:', voiceCommand);
+
+            // Send voice command to backend
+            fetch('/voice-command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command: voiceCommand })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                console.log('Scene Update:', data.sceneUpdate);
+                eval(data.sceneUpdate);
+            }).catch((error) => console.error('Error:', error));
+        };
+
+        recognition.onerror = function(event) {
+            recordButton.style.backgroundColor = 'rgb(255, 255, 255)';
+            console.error('Speech recognition error', event.error);
+        };
+
+        recordButton.addEventListener('click', () => {
+            recordButton.style.backgroundColor = 'rgb(255, 0, 0)';
+            recognition.start();
+        });
+
+
+        // setup 3D scene
+        const canvasContainer = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        canvasContainer.appendChild(renderer.domElement);
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>

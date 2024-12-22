@@ -1,0 +1,9 @@
+{
+  "name": "3d-ai",
+  "module": "server.js",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.21.2",
+    "openai": "^4.77.0"
+  }
+}
