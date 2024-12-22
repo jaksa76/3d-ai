@@ -18,6 +18,8 @@ To start the project, use the following command:
 npm start
 ```
 
+then just click on the mic button and give the computer instructions on what to create (e.g. add a red cube, move it to the left, make the cube use a physical material, add a directional light etc.)
+
 ## Contributing
 If you would like to contribute, please clone the repository and use a feature branch. Pull requests are warmly welcome.
 
