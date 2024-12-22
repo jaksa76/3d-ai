@@ -9,15 +9,30 @@
         body {
             margin: 0;
             overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+        }
+
+        #app {
+            position: relative;
+            background-color: antiquewhite;
+            display: flex;
+            align-items: center;
         }
 
         #canvas-container {
-            width: 100vw;
-            height: 100vh;
+            width: 800px;
+            height: 600px;
+            margin: auto;
         }
 
         #record-button {
-            position: fixed;
+            position: absolute;
             bottom: 20px;
             right: 20px;
             width: 50px;
@@ -27,12 +42,15 @@
             text-align: center;
             line-height: 48px;
             font-size: 24px;
+            border: 1 solid red;
         }
     </style>
 </head>
 <body>
-    <div id="canvas-container"></div>
-    <button id="record-button">🎤</button>
+    <div id="app">
+        <div id="canvas-container"></div>
+        <button id="record-button">🎤</button>
+    </div>
     <script lang="javascript">
         // Generate a unique session ID
         const sessionId = '_' + Math.random().toString(36).substr(2, 9);
@@ -85,7 +103,7 @@
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(800, 600);
         canvasContainer.appendChild(renderer.domElement);
         camera.position.z = 5;
 

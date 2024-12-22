@@ -48,23 +48,21 @@ async function generateSceneUpdate(sessionId, voiceCommand, imageData) {
         }
 
         const messages = sessionHistories[sessionId];
-        messages.push({ role: 'user', content: voiceCommand });
-        if (imageData) {
-            messages.push({
-                role: "user",
-                content: [
-                  { type: "text", text: voiceCommand },
-                  { type: "image_url", image_url: { "url": imageData } }
-                ],
-              });
-        }
+        const messageToSend = {
+            role: "user",
+            content: [
+                { type: "text", text: voiceCommand },
+                { type: "image_url", image_url: { "url": imageData } }
+            ],
+            };
         const response = await openai.chat.completions.create({
-            messages,
+            messages: messages.concat(messageToSend),
             model: "gpt-4o-mini",
         });
 
         const message = response.choices[0].message;
-        messages.push(message);
+        messages.push({ role: 'user', content: voiceCommand }); // save only text of user request
+        messages.push(message); // save the server response
         let content = message.content;
         
         // replace starting and trailing ``` if present
