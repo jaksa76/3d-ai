@@ -23,7 +23,7 @@ const sessionHistories = {};
  * Function to generate a scene update based on the voice command received.
  * Returns a javascript snippet that can be executed on the client side to update the scene.
  */
-async function generateSceneUpdate(sessionId, voiceCommand) {
+async function generateSceneUpdate(sessionId, voiceCommand, imageData) {
     try {
         if (!sessionHistories[sessionId]) {
             sessionHistories[sessionId] = [{ role: 'system', content: `You are a javascript coding assistant. Answer only and exclusively using javascript snippets. You are making a 3d scene using Three.js. The user will ask you to modify the scene and you will generate the required javascript code to implement the requested modifications. Make sure that anything you create is saved in window.objects. And if you reference anything, reference it from window.objects.
@@ -49,6 +49,15 @@ async function generateSceneUpdate(sessionId, voiceCommand) {
 
         const messages = sessionHistories[sessionId];
         messages.push({ role: 'user', content: voiceCommand });
+        if (imageData) {
+            messages.push({
+                role: "user",
+                content: [
+                  { type: "text", text: voiceCommand },
+                  { type: "image_url", image_url: { "url": imageData } }
+                ],
+              });
+        }
         const response = await openai.chat.completions.create({
             messages,
             model: "gpt-4o-mini",
@@ -82,10 +91,10 @@ async function generateSceneUpdate(sessionId, voiceCommand) {
 
 // Endpoint to handle voice commands
 app.post('/voice-command', async (req, res) => {
-    const { sessionId, command } = req.body;
+    const { sessionId, command, imageData } = req.body;
     console.log('Received voice command:', command);
     
-    const sceneUpdate = await generateSceneUpdate(sessionId, command);
+    const sceneUpdate = await generateSceneUpdate(sessionId, command, imageData);
 
     res.json({ status: 'success', command, sceneUpdate });
 });

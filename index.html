@@ -49,13 +49,17 @@
             const voiceCommand = event.results[0][0].transcript;
             console.log('Voice Command:', voiceCommand);
 
-            // Send voice command to backend
+            // Capture the canvas image
+            const canvas = document.querySelector('canvas');
+            const imageData = canvas.toDataURL('image/png');
+
+            // Send voice command and image data to backend
             fetch('/voice-command', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ sessionId, command: voiceCommand })
+                body: JSON.stringify({ sessionId, command: voiceCommand, imageData })
             })
             .then(response => response.json())
             .then(data => {
