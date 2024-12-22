@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import OpenAI from 'openai';
+import { log } from 'console';
 
 const app = express();
 
@@ -16,8 +17,16 @@ app.get('/', (req, res) => {
 });
 
 const openai = new OpenAI();
+const sessionHistories = {};
 
-const messages = [{ role: 'system', content: `You are a javascript generator. Answer only and exclusively using javascript snippets. You are making a 3d scene using Three.js. The user will ask you to modify the scene and you will generate the required javascript code to implement the requested modifications.
+/**
+ * Function to generate a scene update based on the voice command received.
+ * Returns a javascript snippet that can be executed on the client side to update the scene.
+ */
+async function generateSceneUpdate(sessionId, voiceCommand) {
+    try {
+        if (!sessionHistories[sessionId]) {
+            sessionHistories[sessionId] = [{ role: 'system', content: `You are a javascript coding assistant. Answer only and exclusively using javascript snippets. You are making a 3d scene using Three.js. The user will ask you to modify the scene and you will generate the required javascript code to implement the requested modifications. Make sure that anything you create is saved in window.objects. And if you reference anything, reference it from window.objects.
                     
     This is the starting code that has already been executed:
 
@@ -34,39 +43,37 @@ const messages = [{ role: 'system', content: `You are a javascript generator. An
         renderer.render(scene, camera);
     }
     animate();
+    window.objects = {};
     ` }];
+        }
 
-/**
- * Function to generate a scene update based on the voice command received.
- * Returns a javascript snippet that can be executed on the client side to update the scene.
- */
-async function generateSceneUpdate(voiceCommand) {
-    try {
+        const messages = sessionHistories[sessionId];
         messages.push({ role: 'user', content: voiceCommand });
         const response = await openai.chat.completions.create({
             messages,
             model: "gpt-4o-mini",
         });
 
-        messages.push({ role: 'generator', content: response.choices[0].message });
-        let snippet = response.choices[0].message.content;
+        const message = response.choices[0].message;
+        messages.push(message);
+        let content = message.content;
         
         // replace starting and trailing ``` if present
-        if (snippet.startsWith('```')) {
-            if (snippet.startsWith('```javascript')) {
-                snippet = snippet.slice(13);
+        if (content.startsWith('```')) {
+            if (content.startsWith('```javascript')) {
+                content = content.slice(13);
             } else {
-                snippet = snippet.slice(3);
+                content = content.slice(3);
             }
-            if (snippet.endsWith('```')) {
-                snippet = snippet.slice(0, -3);
+            if (content.endsWith('```')) {
+                content = content.slice(0, -3);
             }
         }
 
         // replace \n with newlines
-        snippet = snippet.replace(/\\n/g, '\n');
+        content = content.replace(/\\n/g, '\n');
 
-        return snippet;
+        return content;
     } catch (error) {
         console.error('Error generating scene update:', error);
         return '';
@@ -75,12 +82,12 @@ async function generateSceneUpdate(voiceCommand) {
 
 // Endpoint to handle voice commands
 app.post('/voice-command', async (req, res) => {
-    const voiceCommand = req.body.command;
-    console.log('Received voice command:', voiceCommand);
+    const { sessionId, command } = req.body;
+    console.log('Received voice command:', command);
     
-    const sceneUpdate = await generateSceneUpdate(voiceCommand);
+    const sceneUpdate = await generateSceneUpdate(sessionId, command);
 
-    res.json({ status: 'success', command: voiceCommand, sceneUpdate });
+    res.json({ status: 'success', command, sceneUpdate });
 });
 
 const PORT = process.env.PORT || 3000;
