@@ -6,4 +6,8 @@
     "express": "^4.21.2",
     "openai": "^4.77.0"
   }
+  ,
+  "scripts": {
+    "start": "node server.js"
+  }
 }
